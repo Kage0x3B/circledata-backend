@@ -18,6 +18,15 @@ export default class Server {
         this.setupErrorHandling();
     }
 
+    public start(): void {
+        const hostname = config.hostname;
+        const port = config.port;
+
+        this.app.listen(port, hostname, () => {
+            console.log(`Server listening on ${port}!`);
+        });
+    }
+
     private setupControllers(): void {
         const controllerList: IControllerBase[] = [
             new AuthController()
@@ -64,15 +73,6 @@ export default class Server {
                     }
                 });
             }
-        });
-    }
-
-    public start(): void {
-        const hostname = config.hostname;
-        const port = config.port;
-
-        this.app.listen(port, hostname, () => {
-            console.log(`Server listening on ${port}!`);
         });
     }
 }
