@@ -13,7 +13,7 @@
         "type": "git",
         "url": "git+https://github.com/Kage0x3B/circledata-backend.git"
     },
-    "author": "Moritz Hein",
+    "author": "Moritz Hein <moritz.hein@live.de> (https://moritz-hein.de)",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/Kage0x3B/circledata-backend/issues"
