@@ -1,8 +1,8 @@
 import express, { Application, json, NextFunction, Request, Response, urlencoded } from "express";
 import cors from "cors";
-import config from "./config";
-import NotFoundError from "./util/error/NotFoundError";
-import RestError from "./util/error/RestError";
+import config from "~config";
+import NotFoundError from "~error/NotFoundError";
+import RestError from "~error/RestError";
 import IControllerBase from "~interface/IController";
 import AuthController from "~controller/auth";
 import helmet from "helmet";
