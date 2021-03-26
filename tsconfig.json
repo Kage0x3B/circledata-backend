@@ -25,9 +25,13 @@
             ]
         },
         "strict": true,
+        "strictPropertyInitialization": false,
         "moduleResolution": "node",
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true
     }
 }

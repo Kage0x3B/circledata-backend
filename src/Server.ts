@@ -1,21 +1,33 @@
-import express, { Application, json, NextFunction, Request, Response, urlencoded } from "express";
-import cors from "cors";
+import { Application } from "express";
 import config from "~config";
-import NotFoundError from "~error/NotFoundError";
-import RestError from "~error/RestError";
-import IControllerBase from "~interface/IController";
-import AuthController from "~controller/auth";
-import helmet from "helmet";
+
+import { createExpressServer, getMetadataArgsStorage } from "routing-controllers";
+import { routingControllersToSpec } from "routing-controllers-openapi";
+import SwaggerUi from "swagger-ui-express";
+import { validationMetadatasToSchemas } from "class-validator-jsonschema";
+import apiSpecInfo from "~util/apiSpecificationInfo";
+import { Logger } from "./service/Logger";
 
 export default class Server {
+    private log = new Logger(__filename);
+
     private app: Application;
 
     constructor() {
-        this.app = express();
+        this.app = createExpressServer({
+            // TODO: Restrict to correct frontend url in production
+            cors: true,
+            defaultErrorHandler: false,
+            controllers: [__dirname + "/controller/*.ts"],
+            middlewares: [__dirname + "/middleware/*.ts"],
+            defaults: {
+                paramOptions: {
+                    required: true
+                }
+            }
+        });
 
-        this.setupMiddleware();
-        this.setupControllers();
-        this.setupErrorHandling();
+        this.setupSwaggerDocumentation();
     }
 
     public start(): void {
@@ -23,56 +35,20 @@ export default class Server {
         const port = config.port;
 
         this.app.listen(port, hostname, () => {
-            console.log(`Server listening on ${port}!`);
+            this.log.info(`Server listening on ${hostname}:${port}!`);
         });
     }
 
-    private setupControllers(): void {
-        const controllerList: IControllerBase[] = [
-            new AuthController()
-        ];
-
-        controllerList.forEach(controller => {
-            controller.initRoutes();
-
-            this.app.use(controller.path, controller.router);
+    private setupSwaggerDocumentation(): void {
+        const metadataStorage = getMetadataArgsStorage();
+        const schemas = validationMetadatasToSchemas({
+            refPointerPrefix: "#/components/schemas/"
         });
-    }
-
-    private setupMiddleware(): void {
-        this.app.use(helmet());
-
-        this.app.use(json({ limit: "10mb" }));
-        this.app.use(urlencoded({ extended: false }));
-
-        //TODO: Restrict to correct frontend url in production
-        this.app.use(cors());
-    }
-
-    private setupErrorHandling(): void {
-        this.app.all("*", () => {
-            throw new NotFoundError("Request handler not found");
+        const openApiSpec = routingControllersToSpec(metadataStorage, {}, {
+            components: { schemas },
+            info: apiSpecInfo
         });
 
-        const ignoredErrors = [401];
-
-        this.app.use((err: RestError | Error, req: Request, res: Response, next: NextFunction) => {
-            if (err instanceof RestError) {
-                if (config.dev && !ignoredErrors.includes(err.statusCode)) {
-                    console.warn(err);
-                }
-
-                res.status(err.statusCode).json(err.toResponse());
-            } else {
-                res.status(500).json({
-                    success: false,
-                    message: err.message,
-                    err: {
-                        ...err,
-                        statusCode: 500
-                    }
-                });
-            }
-        });
+        this.app.use("/api-docs", SwaggerUi.serve, SwaggerUi.setup(openApiSpec));
     }
 }
