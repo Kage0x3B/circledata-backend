@@ -1,9 +1,7 @@
 import "module-alias/register";
 import "reflect-metadata";
-import Server from "./Server";
-import { configure, format, transports } from "winston";
-import config from "~config";
 import { loadLogger } from "./loader/LoggerLoader";
+import Server from "./Server";
 
 loadLogger();
 
